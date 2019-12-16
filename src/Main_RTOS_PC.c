@@ -7,17 +7,9 @@
 
 /*=====[Inclusions of function dependencies]=================================*/
 
-
-#include "sapi.h"
-#include "FreeRTOS.h"		//Motor del OS
-#include "FreeRTOSConfig.h"
 #include "Main_RTOS_PC.h"
 #include "BLUE_USB_UART.h"
 #include "LED_OUT.h"
-
-#include "task.h"			//Api de control de tareas y temporización
-#include "semphr.h"			//Api de sincronización (sem y mutex)
-
 
 /*=====[Definition macros of private constants]==============================*/
 
@@ -60,7 +52,7 @@ int main( void ){
 		(const char *)"Recibe_PC",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -69,7 +61,7 @@ int main( void ){
 		(const char *)"Recibe_BLE",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -78,7 +70,7 @@ int main( void ){
 		(const char *)"ControlDataBLE",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -87,7 +79,7 @@ int main( void ){
 		(const char *)"ControlDataPC",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -96,7 +88,7 @@ int main( void ){
 		(const char *)"ControlOut",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -105,7 +97,7 @@ int main( void ){
 		(const char *)"ControlTecla",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 

@@ -9,9 +9,7 @@
 #define PROGRAMS_COMUNICACION_RTOS_PC_INC_BLUE_USB_UART_H_
 
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "sapi.h"
+#include "Main_RTOS_PC.h"
 
 /*=====[C++ - begin]=========================================================*/
 
@@ -29,7 +27,6 @@ extern "C" {
 /*=====[Public function-like macros]=========================================*/
 
 /*=====[Definitions of public data types]====================================*/
-
 
 extern uint8_t control_Out;				//variable externa de control de salidas.
 extern uint8_t control_data;			//variable control de datos.

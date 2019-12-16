@@ -7,14 +7,9 @@
 
 /*==================[inlcusiones]============================================*/
 
-// Includes de FreeRTOS
+
 #include "BLUE_USB_UART.h"
 #include "LED_OUT.h"
-#include "task.h"		//Api de control de tareas y temporización
-#include "semphr.h"		//Api de sincronización (sem y mutex)
-
-// sAPI header
-#include "sapi.h"
 #include "string.h"
 
 
@@ -75,30 +70,32 @@ void ControlOut (void* taskParmPtr){
 	//----------- TASK CONTROL de TECLA -----------------------
 void ControlTecla(void* taskParmPtr){
 
-	uint8_t estado = 0;	//variable estado de tecla.
-
 	while(TRUE){
-
 		if (!gpioRead( TEC1 )){ //(!false) tecla presionada (!true) no presionada.
-			estado = 1;		//Solicitud de inicializacion de conexion.
+			xSemaphoreTake(Evento_Save,portMAX_DELAY);
+			control_Out = 1;	//save solicitud.
+			xSemaphoreGive(Evento_Save);
+			gpioWrite( LED3, ON);
 			}
 
 		if (!gpioRead( TEC2 )){ //(!false) tecla presionada (!true) no presionada.
-			estado = 2;		//Solicitud de apagado de conexion.
+			xSemaphoreTake(Evento_Save,portMAX_DELAY);
+			control_Out = 2;	//save solicitud.
+			xSemaphoreGive(Evento_Save);
+			gpioWrite( LED3, OFF);
 		   }
 
 		if (!gpioRead( TEC3 )) { //(!false) tecla presionada (!true) no presionada.
-			estado = 3;		 //Solicitud de medicion.
+			xSemaphoreTake(Evento_Save,portMAX_DELAY);
+			control_Out = 3;	//save solicitud.
+			xSemaphoreGive(Evento_Save);
 	       }
 
 		if (!gpioRead( TEC4 )) { //(!false) tecla presionada (!true) no presionada.
-			estado = 4;		 //Solicitud identificación.
+			xSemaphoreTake(Evento_Save,portMAX_DELAY);
+			control_Out = 4;	//save solicitud.
+			xSemaphoreGive(Evento_Save);
 		   }
-
-        xSemaphoreTake(Evento_Save,portMAX_DELAY);
-        control_Out = estado;	//save solicitud.
-		xSemaphoreGive(Evento_Save);
-
 	}
 }
 

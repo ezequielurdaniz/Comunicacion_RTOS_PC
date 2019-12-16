@@ -14,6 +14,11 @@
 
 #include "stdint.h"
 #include "stddef.h"
+#include "sapi.h"			// sAPI header
+#include "FreeRTOSConfig.h"
+#include "FreeRTOS.h"
+#include "task.h"			//Api de control de tareas y temporización
+#include "semphr.h"			//Api de sincronización (sem y mutex)
 
 /*=====[C++ - begin]=========================================================*/
 
@@ -26,9 +31,6 @@ extern "C" {
 /*=====[Public function-like macros]=========================================*/
 
 /*=====[Definitions of public data types]====================================*/
-
-extern uint8_t control_Out = 0; 	//variable externa de control de salidas.
-extern uint8_t control_data = 0;	//variable control de datos.
 
 /*=====[Prototypes (declarations) of public functions]=======================*/
 
