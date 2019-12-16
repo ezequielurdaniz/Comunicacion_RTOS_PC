@@ -23,7 +23,6 @@ SemaphoreHandle_t Evento_Recibe, Evento_Save; 			//Semaphore de tareas
 uint8_t data_in = 0; 			//variable de dato recibido.
 uint8_t data_ex_pc = 0;			//variable de dato PC.
 uint8_t data_ex_bl = 0;			//variable de dato BLE.
-bool_t  test = FALSE;
 /*==================[definiciones de datos externos]=========================*/
 
 DEBUG_PRINT_ENABLE;  //Para configurar los mensajes por monitor
@@ -53,10 +52,9 @@ void init_UART_USB_BLE (void){
 }
 	// ------------FUNCIÓN TESTEO HM10 -------------------
 bool_t hm10bleTest( int32_t uart ){
-   //uartWriteString( uart, "AT\r\n" ); // Enviar comandos AT\r\n a BLE HM10
-   //return waitForReceiveStringOrTimeoutBlocking( uart,"OK\r\n", strlen("OK\r\n"),500); //1000 Espero un OK\r\n o Timeout
-   return TRUE;
-}
+   uartWriteString( uart, "AT\r\n" ); // Enviar comandos AT\r\n a BLE HM10
+   return waitForReceiveStringOrTimeoutBlocking( uart,"OK\r\n", strlen("OK\r\n"),500); //1000 Espero un OK\r\n o Timeout
+  }
 
 	//-------------TASK RECIBIR de UART PC --------------
 void Recibe_PC (void* taskParmPtr){
