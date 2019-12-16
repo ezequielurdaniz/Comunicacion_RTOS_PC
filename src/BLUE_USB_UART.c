@@ -60,7 +60,7 @@ bool_t hm10bleTest( int32_t uart ){
 void Recibe_PC (void* taskParmPtr){
 
 	while(TRUE){
-		if( uartReadByte(UART_PC, &data_in)){			//Ready dato en UART_PC.
+ 		if( uartReadByte(UART_PC, &data_in)){			//Ready dato en UART_PC.
 
 			xSemaphoreTake(Evento_Recibe,portMAX_DELAY);
 			data_ex_pc = data_in;						//Save dato.

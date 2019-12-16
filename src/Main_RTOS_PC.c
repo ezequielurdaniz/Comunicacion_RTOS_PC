@@ -52,7 +52,7 @@ int main( void ){
 		(const char *)"Recibe_PC",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -61,7 +61,7 @@ int main( void ){
 		(const char *)"Recibe_BLE",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -70,7 +70,7 @@ int main( void ){
 		(const char *)"ControlDataBLE",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -79,7 +79,7 @@ int main( void ){
 		(const char *)"ControlDataPC",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -88,7 +88,7 @@ int main( void ){
 		(const char *)"ControlOut",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -106,19 +106,15 @@ int main( void ){
 
    //-------------- INCIAR SCHEDDULER -------------------------
    if (0 == Error_state){
-
 	   vTaskStartScheduler();	//Inicializo el SO.
-	   gpioWrite( LEDB, ON );	//Led Blue indicador de funcionamiento.
 
    } else{
-	  printf("Error al iniciar el sistema SO!"); //Informo el problema.
+	   gpioWrite( LEDR, ON );  // No pudo iniciar el scheduler.
    }
 
    // ------------- REPETIR POR SIEMPRE --------------------------
    while( TRUE ){
-
-	   gpioWrite( LEDR, ON );  // No pudo iniciar el scheduler.
-
+	   //Sin Accion.
    }
 
    return 0;
