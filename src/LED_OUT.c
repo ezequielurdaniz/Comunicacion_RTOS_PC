@@ -71,14 +71,12 @@ void ControlTecla(void* taskParmPtr){
 			xSemaphoreTake(Evento_Save,portMAX_DELAY);
 			control_Out = 1;	//save solicitud.
 			xSemaphoreGive(Evento_Save);
-			gpioWrite( LED3, ON);
 			}
 
 		if (!gpioRead( TEC2 )){ //(!false) tecla presionada (!true) no presionada.
 			xSemaphoreTake(Evento_Save,portMAX_DELAY);
 			control_Out = 2;	//save solicitud.
 			xSemaphoreGive(Evento_Save);
-			gpioWrite( LED3, OFF);
 		   }
 
 		if (!gpioRead( TEC3 )) { //(!false) tecla presionada (!true) no presionada.
