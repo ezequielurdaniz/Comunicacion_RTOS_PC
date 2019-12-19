@@ -15,13 +15,13 @@
 
 
 //*==================[definiciones de datos internos]==========================*/
-SemaphoreHandle_t Evento_Recibe, Evento_Save; 			//Semaphore de tareas
+SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_Read; 	//Semaphore de tareas
 
 uint8_t data_in = 0; 			//variable de dato recibido.
 uint8_t data_ex_pc = 0;			//variable de dato PC.
 uint8_t data_ex_bl = 0;			//variable de dato BLE.
 uint8_t control_Out = 0;			//variable de control de salidas.
-uint8_t control_data = 0;			//variable control de datos.
+uint8_t control_OutD = 0;			//variable de control de indices.
 
 /*==================[definiciones de datos externos]=========================*/
 
@@ -42,7 +42,7 @@ void init_UART_USB_BLE (void){
 	 uartWriteString( UART_PC, "UART_BLUETOOTH configurada.\r\n" );
 
 	 //Testet del modulo BLE HM10
-	 if( hm10bleTest( UART_BLUETOOTH )){ //
+	 if( hm10bleTest( UART_BLUETOOTH)){ //hm10bleTest( UART_BLUETOOTH)
 		 uartWriteString( UART_PC, "Modulo BLE HM10 conectado correctamente.\r\n" );
 	   }
 	   else{
@@ -58,84 +58,104 @@ bool_t hm10bleTest( int32_t uart ){
 
 	//-------------TASK RECIBIR de UART PC --------------
 void Recibe_PC (void* taskParmPtr){
-
 	while(TRUE){
- 		if( uartReadByte(UART_PC, &data_in)){			//Ready dato en UART_PC.
-
-			xSemaphoreTake(Evento_Recibe,portMAX_DELAY);
-			data_ex_pc = data_in;						//Save dato.
-			xSemaphoreGive(Evento_Recibe);
-			}
-
+		xSemaphoreTake(Mutex_Recibe,portMAX_DELAY);		//Inicio zona critica. Recibe
+ 		if( uartReadByte(UART_PC, &data_in)){				//Read dato en UART_PC.
+			data_ex_pc = data_in;							//Save dato.
+		}
+		xSemaphoreGive(Mutex_Recibe);					//Salida de zona critica.
+ 		vTaskDelay( 5/ portTICK_RATE_MS ); 		//Estado Blocked para liberacion de recurso.
 	}
 }
 	//----------- TASK RECIBIR de UART BLE --------------
 void Recibe_BLE (void* taskParmPtr){
-
 	while(TRUE){
-		if( uartReadByte(UART_BLUETOOTH, &data_in)){	//Ready dato en UART_BLE.
-
-			xSemaphoreTake(Evento_Recibe,portMAX_DELAY);
-			data_ex_bl = data_in;						//Save dato.
-			xSemaphoreGive(Evento_Recibe);
-
+		xSemaphoreTake(Mutex_Recibe,portMAX_DELAY); 	//Inicio zona critica. Recibe
+		if( uartReadByte(UART_BLUETOOTH, &data_in)){		//Read dato en UART_BLE.
+			if(data_in != '\0'){							// Dato recibido distino de <break>
+				data_ex_bl = data_in;						//Save dato.
 			}
+		}
+		xSemaphoreGive(Mutex_Recibe);					//Salida de zona critica.
+		vTaskDelay( 5/ portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
 	}
 }
 
 	//----------- TASK CONTROL de DATA de BLE------------------
 void ControlDataBLE (void* taskParmPtr){
-
 	while(TRUE){
-		if( data_ex_bl == 'C' ){
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out= 1;			//Solicitud de inicializacion de conexion.
-	        xSemaphoreGive(Evento_Save);
+		if( data_ex_bl == 'c'){
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			uartWriteString(UART_PC, "r\r" );	//Comando de SONDA ON
+			control_Out= 1;						//Solicitud de inicializacion de conexion.
+			data_ex_bl=0;						//Reseteo de variable
+			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
+
 	      }
-		if( data_ex_bl == 'A' ){
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out = 2;		//Solicitud de apagado de conexion.
-	        xSemaphoreGive(Evento_Save);
+		if( data_ex_bl == 'a'){
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			uartWriteString(UART_PC, "o\r" ); //Comando de SONDA OFF.
+			control_Out = 2;				//Solicitud de apagado de conexion.
+			data_ex_bl=0;					//Reseteo de variable
+			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
 	      }
-		if( data_ex_bl == 'B' ){
-	      	xSemaphoreTake(Evento_Save,portMAX_DELAY);
-	      	control_Out= 3;			//Solicitud de medicion.
-	        xSemaphoreGive(Evento_Save);
+		if( data_ex_bl == 'b'){
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			uartWriteString(UART_PC, "D5\r" ); //Comando de Medición de Sonda.
+	      	control_Out= 3;					//Solicitud de medicion.
+	      	control_OutD= 3;				//Solicitud de envio de dato.
+	      	data_ex_bl=0;					//Reseteo de variable
+	      	data_ex_pc=0;					//Reseteo de variable
+	      	xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
 	      }
-		if( data_ex_bl == 'D' ){
-	        xSemaphoreTake(Evento_Save,portMAX_DELAY);
-	        control_Out= 4;			 //Solicitud identificación.
-	        xSemaphoreGive(Evento_Save);
+		if( data_ex_bl == 'd'){
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			uartWriteString(UART_PC, "i\r" ); //Comando de ID de Sonda.
+	      	control_Out= 4;			 		//Solicitud identificación.
+	        control_OutD= 4;				//Solicitud de envio de ID.
+	    	data_ex_bl=0;					//Reseteo de variable
+	    	data_ex_pc=0;					//Reseteo de variable
+	    	xSemaphoreGive(Mutex_Save);			//Salida de zona critica.
+
 	      }
+    	vTaskDelay( 5 / portTICK_RATE_MS ); //Estado Blocked para liberacion de recurso.
 	}
 }
 
 	//----------- TASK CONTROL de DATA de PC ------------------
 void ControlDataPC (void* taskParmPtr){
-
 	while(TRUE){
-
-		if( data_ex_pc != 0 ){
-
-			switch (control_Out){			//Switch estado de control_out
+		if(data_ex_pc !=0){
+		switch (control_OutD){
+			//Switch estado de variable control_outD
 				case 3:
-					uartWriteString(UART_BLUETOOTH, "Campo:" ); //Envio a BLE la medición.
-					uartWriteByte( UART_BLUETOOTH, data_ex_pc );
-					break;
+						xSemaphoreTake(Mutex_Read,portMAX_DELAY); 	//Inicio zona critica. Read_Enviar
+						uartWriteString(UART_BLUETOOTH, "Campo:" ); //String de identificación de medición.
+						uartWriteByte( UART_BLUETOOTH, data_ex_pc );//Envio medición de campo a UART_BLE
+						control_OutD=0;								//Reseteo de variable de control.
+						gpioWrite(LED2, OFF);						//Apago LED2. Fin de operacion Campo.
+						xSemaphoreGive(Mutex_Read);					//Salida de zona critica.
+
+			    	break;
 
 				case 4:
-					uartWriteString(UART_BLUETOOTH, "ID:" );
-					uartWriteByte( UART_BLUETOOTH, data_ex_pc ); //Envio a BLE la identificación..
+						xSemaphoreTake(Mutex_Read,portMAX_DELAY); 	//Inicio zona critica. Read_Enviar
+						uartWriteString(UART_BLUETOOTH, "ID:" );	//String de identificación de ID.
+						uartWriteByte( UART_BLUETOOTH, data_ex_pc ); //Envio numero  de identificación a UART_BLE
+						control_OutD=0;								//Reseteo de variable de control.
+						gpioWrite(LED3, OFF);						//Apago LED3. Fin de operacion estatus.
+						xSemaphoreGive(Mutex_Read);					//Salida de zona critica.
 					break;
 
 			  	default:
 			  		 //Sin Acción.
 			  		break;
-			}
 		}
-	}
-}
+		}
 
+		vTaskDelay( 10 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
+}
+}
 
 /*==================[fin del archivo]========================================*/
 

@@ -29,7 +29,8 @@ extern "C" {
 /*=====[Definitions of public data types]====================================*/
 
 extern uint8_t control_Out;				//variable externa de control de salidas.
-extern uint8_t control_data;			//variable control de datos.
+extern uint8_t control_OutD;			//variable de control de indices.
+extern uint8_t data_ex_pc;				//variable de dato PC.
 
 
 /*=====[Prototypes (declarations) of public functions]=======================*/

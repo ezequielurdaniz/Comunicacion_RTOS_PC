@@ -21,10 +21,9 @@ DEBUG_PRINT_ENABLE;  //Configurar mensajes de consola
 
 /*=====[Definitions of private global variables]=============================*/
 
-SemaphoreHandle_t Evento_Recibe, Evento_Save; 	//Semaphore de tareas
+SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_Read; 	//Semaphore de tareas
 
 /*=====[Main function, program entry point after power on or reset]==========*/
-
 
 
 int main( void ){
@@ -37,13 +36,19 @@ int main( void ){
 	// -----------CONFIGURACIÓN de SEMAPHORE -------------------
 	uint8_t Error_state = 0;	// inicializo flag de error.
 
-	if (NULL == (Evento_Recibe = xSemaphoreCreateBinary())){   // Semaphore Recibe.
-		Error_state =1;
-	}
+	if (NULL == (Mutex_Recibe = xSemaphoreCreateMutex()))		//semaphore mutex Recibe
+	   {
+	   	   Error_state =1;										//flag de error.
+	   }
 
-	if (NULL == (Evento_Save = xSemaphoreCreateBinary())){   // Semaphore Save.
-		Error_state =1;
-	}
+	if (NULL == (Mutex_Save = xSemaphoreCreateMutex()))			//semaphore mutex Save
+	   {
+		   Error_state =1;										//flag de error.
+	   }
+	if (NULL == (Mutex_Read = xSemaphoreCreateMutex()))			//semaphore Mutex Read
+	   {
+		   Error_state =1;										//flag de error.
+	   }
 
 
 	// --------------CREACIÓN de TAREAS --------------------------
@@ -52,7 +57,7 @@ int main( void ){
 		(const char *)"Recibe_PC",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -61,7 +66,7 @@ int main( void ){
 		(const char *)"Recibe_BLE",     	// Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -70,7 +75,7 @@ int main( void ){
 		(const char *)"ControlDataBLE",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
 
@@ -79,8 +84,8 @@ int main( void ){
 		(const char *)"ControlDataPC",     // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+2,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+	    0                	          	// Puntero a la tarea creada en el sistema
 	);
 
 	xTaskCreate(
@@ -94,14 +99,12 @@ int main( void ){
 
 	xTaskCreate(
 		ControlTecla,                   // Funcion de la tarea a ejecutar
-		(const char *)"ControlTecla",     // Nombre de la tarea como String
+		(const char *)"ControlTecla",   // Nombre de la tarea como String
 		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
 		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+3,         	// Prioridad de la tarea
+	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
 	    0                           	// Puntero a la tarea creada en el sistema
 	);
-
-
 
 
    //-------------- INCIAR SCHEDDULER -------------------------
@@ -111,8 +114,7 @@ int main( void ){
    } else{
 	   gpioWrite( LEDR, ON );  // No pudo iniciar el scheduler.
    }
-
-   // ------------- REPETIR POR SIEMPRE --------------------------
+ // ------------- REPETIR POR SIEMPRE --------------------------
    while( TRUE ){
 	   //Sin Accion.
    }

@@ -17,7 +17,7 @@
 
 /*==================[definiciones de datos internos]=========================*/
 
-SemaphoreHandle_t Evento_Recibe, Evento_Save; 				//Semaphore de tareas
+SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_Read; 	//Semaphore de tareas
 
 TickType_t tiempo_inic_ciclo;								//Variable para uso de espera.
 
@@ -35,29 +35,34 @@ DEBUG_PRINT_ENABLE;  //Para configurar los mensajes por monitor
 	//----------- TASK CONTROL de OUT -----------------------
 void ControlOut (void* taskParmPtr){
 
-	tiempo_inic_ciclo = xTaskGetTickCount();	//Tiempo inicio de ciclo.
-
 	while(TRUE){
+
 	    if( control_Out == 1 ){
-	    	uartWriteString(UART_PC, "r" );	//Comando de inicializacion de conexion.
-	    	gpioWrite( LEDG, ON );			//Enciendo LED GREEN. Establecer conexion.
+		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
+	    	gpioWrite( LEDG, ON );					//Enciendo LED GREEN. Establecer conexion.
+	    	control_Out =0;								//Reseteo de variable de control.
+		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
 	    if( control_Out == 2 ){
-	    	uartWriteString(UART_PC, "o" );	//Comando de apagado de conexion.
-	    	gpioWrite( LEDG, OFF);	//Apago LED GREEN. Finalizar conexion.
+		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
+	    	gpioWrite( LEDG, OFF);					//Apago LED GREEN. Finalizar conexion.
+	    	control_Out =0;								//Reseteo de variable de control.
+		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
 	    if( control_Out == 3 ){
-	    	uartWriteString(UART_PC, "D5" );	//Comando de solicitud de medicion.
-	    	gpioWrite( LED1, ON );	//Enciendo LED1. Medir Campo.
-	       	vTaskDelayUntil( &tiempo_inic_ciclo, 200 / portTICK_RATE_MS); // Espera 200ms
-	    	gpioWrite( LED1, OFF);	//Apago LED1. Fin de operacion Campo.
+		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
+		    gpioWrite( LED2, ON );					//Enciendo LED2. Medir Campo.
+	    	control_Out =0;								//Reseteo de variable de control.
+		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
 	    if( control_Out == 4 ){
-	    	uartWriteString(UART_PC, "i" );	//Comando de solicitud identificación.
-	    	gpioWrite( LED2, ON );	//Enciendo LED2. Estatus del conexion.
-	    	vTaskDelayUntil( &tiempo_inic_ciclo, 200 / portTICK_RATE_MS); // Espera 200ms
-	    	gpioWrite( LED2, OFF);	//Apago LED2. Fin de operacion estatus.
+		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
+		    gpioWrite( LED3, ON );					//Enciendo LED3. Estatus del conexion.
+	    	control_Out =0;								//Reseteo de variable de control.
+		    xSemaphoreGive(Mutex_Save);				 //Fin zona critica.
 	    }
+
+	    vTaskDelay( 10/ portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
 
 	}
 }
@@ -67,28 +72,39 @@ void ControlOut (void* taskParmPtr){
 void ControlTecla(void* taskParmPtr){
 
 	while(TRUE){
-		if (!gpioRead( TEC1 )){ //(!false) tecla presionada (!true) no presionada.
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out = 1;	//save solicitud.
-			xSemaphoreGive(Evento_Save);
+		if (!gpioRead( TEC1 )){ //(!false) tecla presionada.
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			control_Out = 1;						//Solicitud de inicializacion de conexion.
+	      	data_ex_pc = 0;					//Reseteo de variable
+			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
+			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
 			}
 
-		if (!gpioRead( TEC2 )){ //(!false) tecla presionada (!true) no presionada.
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out = 2;	//save solicitud.
-			xSemaphoreGive(Evento_Save);
+		if (!gpioRead( TEC2 )){ //(!false) tecla presionada.
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+			control_Out = 2;				//Solicitud de apagado de conexion.
+	      	data_ex_pc=0;					//Reseteo de variable
+			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
+			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
 		   }
 
-		if (!gpioRead( TEC3 )) { //(!false) tecla presionada (!true) no presionada.
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out = 3;	//save solicitud.
-			xSemaphoreGive(Evento_Save);
+
+		if (!gpioRead( TEC3 )) { //(!false) tecla presionada.
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+	      	control_Out= 3;					//Solicitud de medicion.
+	      	control_OutD= 3;				//Solicitud de envio de dato.
+	      	data_ex_pc=0;					//Reseteo de variable
+	      	xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
+	      	vTaskDelay( 40 / portTICK_RATE_MS ); 	//Estado Blocked para liberacion de recurso.
 	       }
 
-		if (!gpioRead( TEC4 )) { //(!false) tecla presionada (!true) no presionada.
-			xSemaphoreTake(Evento_Save,portMAX_DELAY);
-			control_Out = 4;	//save solicitud.
-			xSemaphoreGive(Evento_Save);
+		if (!gpioRead( TEC4 )) { //(!false) tecla presionada.
+			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
+	        control_Out= 4;			 		//Solicitud identificación.
+	        control_OutD= 4;				//Solicitud de envio de ID.
+	      	data_ex_pc=0;					//Reseteo de variable
+			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
+			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
 		   }
 	}
 }
