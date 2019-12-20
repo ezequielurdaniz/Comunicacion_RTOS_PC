@@ -7,9 +7,11 @@
 
 /*=====[Inclusions of function dependencies]=================================*/
 
+
 #include "Main_RTOS_PC.h"
 #include "BLUE_USB_UART.h"
 #include "LED_OUT.h"
+#include "TECLA.h"
 
 /*=====[Definition macros of private constants]==============================*/
 
@@ -21,103 +23,101 @@ DEBUG_PRINT_ENABLE;  //Configurar mensajes de consola
 
 /*=====[Definitions of private global variables]=============================*/
 
-SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_Read; 	//Semaphore de tareas
+SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_t_pulsado;	//Semaphore de tareas
 
 /*=====[Main function, program entry point after power on or reset]==========*/
 
 
 int main( void ){
 
-	// ---------- CONFIGURACIONES ------------------------------
-	boardConfig();			// Init & config CIAA
+		// ---------- CONFIGURACIONES ------------------------------
+		boardConfig();			// Init & config CIAA
 
-	init_UART_USB_BLE();	// Init UART_USB & UART 232 Modulo BLUETOOTH
-
-	// -----------CONFIGURACIÓN de SEMAPHORE -------------------
-	uint8_t Error_state = 0;	// inicializo flag de error.
-
-	if (NULL == (Mutex_Recibe = xSemaphoreCreateMutex()))		//semaphore mutex Recibe
-	   {
-	   	   Error_state =1;										//flag de error.
-	   }
-
-	if (NULL == (Mutex_Save = xSemaphoreCreateMutex()))			//semaphore mutex Save
-	   {
-		   Error_state =1;										//flag de error.
-	   }
-	if (NULL == (Mutex_Read = xSemaphoreCreateMutex()))			//semaphore Mutex Read
-	   {
-		   Error_state =1;										//flag de error.
-	   }
+		init_UART_USB_BLE();	// Init UART_USB & UART 232 Modulo BLUETOOTH
 
 
-	// --------------CREACIÓN de TAREAS --------------------------
-	xTaskCreate(
-		Recibe_PC,                     	// Funcion de la tarea a ejecutar
-		(const char *)"Recibe_PC",     	// Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
-	);
+		// -----------CONFIGURACIÓN de SEMAPHORE -------------------
+		uint8_t Error_state = 0;	// inicializo flag de error.
 
-	xTaskCreate(
-		Recibe_BLE,                     	// Funcion de la tarea a ejecutar
-		(const char *)"Recibe_BLE",     	// Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
-	);
+		if (NULL == (Mutex_Recibe = xSemaphoreCreateMutex())){		//semaphore mutex Recibe.
+			Error_state =1;											//flag de error.
+		   }
 
-	xTaskCreate(
-		ControlDataBLE,                     // Funcion de la tarea a ejecutar
-		(const char *)"ControlDataBLE",     // Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
-	);
+		if (NULL == (Mutex_Save = xSemaphoreCreateMutex())){		//semaphore mutex Save.
+		   Error_state =1;											//flag de error.
+		   }
 
-	xTaskCreate(
-		ControlDataPC ,                   // Funcion de la tarea a ejecutar
-		(const char *)"ControlDataPC",     // Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                	          	// Puntero a la tarea creada en el sistema
-	);
+		if (NULL == (Mutex_t_pulsado = xSemaphoreCreateMutex())){	//semaphore mutex tecla.
+			Error_state =1;											//flag de error.
+			}
 
-	xTaskCreate(
-		ControlOut,                     // Funcion de la tarea a ejecutar
-		(const char *)"ControlOut",     // Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
-	);
+		// --------------CREACIÓN de TAREAS --------------------------
+			xTaskCreate(
+				Recibe_PC,                     	// Funcion de la tarea a ejecutar
+				(const char *)"Recibe_PC",     	// Nombre de la tarea como String
+				configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
+				0,                          	// Parametros de tarea
+			    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+			    0                           	// Puntero a la tarea creada en el sistema
+			);
 
-	xTaskCreate(
-		ControlTecla,                   // Funcion de la tarea a ejecutar
-		(const char *)"ControlTecla",   // Nombre de la tarea como String
-		configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
-		0,                          	// Parametros de tarea
-	    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
-	    0                           	// Puntero a la tarea creada en el sistema
-	);
+			xTaskCreate(
+				Recibe_BLE,                     	// Funcion de la tarea a ejecutar
+				(const char *)"Recibe_BLE",     	// Nombre de la tarea como String
+				configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
+				0,                          	// Parametros de tarea
+			    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+			    0                           	// Puntero a la tarea creada en el sistema
+			);
 
+			xTaskCreate(
+				ControlDataBLE,                     // Funcion de la tarea a ejecutar
+				(const char *)"ControlDataBLE",     // Nombre de la tarea como String
+				configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
+				0,                          	// Parametros de tarea
+			    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+			    0                           	// Puntero a la tarea creada en el sistema
+			);
 
-   //-------------- INCIAR SCHEDDULER -------------------------
-   if (0 == Error_state){
-	   vTaskStartScheduler();	//Inicializo el SO.
+			xTaskCreate(
+				ControlDataPC ,                   // Funcion de la tarea a ejecutar
+				(const char *)"ControlDataPC",     // Nombre de la tarea como String
+				configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
+				0,                          	// Parametros de tarea
+			    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+			    0                	          	// Puntero a la tarea creada en el sistema
+			);
 
-   } else{
-	   gpioWrite( LEDR, ON );  // No pudo iniciar el scheduler.
-   }
- // ------------- REPETIR POR SIEMPRE --------------------------
-   while( TRUE ){
-	   //Sin Accion.
-   }
+			xTaskCreate(
+				ControlOut,                     // Funcion de la tarea a ejecutar
+				(const char *)"ControlOut",     // Nombre de la tarea como String
+				configMINIMAL_STACK_SIZE*2, 	// Cantidad de stack de la tarea
+				0,                          	// Parametros de tarea
+			    tskIDLE_PRIORITY+1,         	// Prioridad de la tarea
+			    0                           	// Puntero a la tarea creada en el sistema
+			);
 
-   return 0;
-}
+			xTaskCreate(
+				Tecla,                     // Funcion de la tarea a ejecutar
+				(const char *)"Tecla",     // Nombre de la tarea como String amigable para el usuario
+			    configMINIMAL_STACK_SIZE*2, // Cantidad de stack de la tarea
+			    0,                          // Parametros de tarea
+			    tskIDLE_PRIORITY+1,         // Prioridad de la tarea
+			    0                           // Puntero a la tarea creada en el sistema
+			);
+
+			//-------------- INCIAR SCHEDDULER -------------------------
+
+			 if (0 == Error_state){
+				   vTaskStartScheduler();	//Inicializo el SO.
+
+			   } else {
+				   gpioWrite( LEDR, ON );  // No pudo iniciar el scheduler.
+			   }
+			 // ------------- REPETIR POR SIEMPRE --------------------------
+			   while( TRUE ){
+				   //Sin Accion.
+			   }
+
+			 return 0;
+	}

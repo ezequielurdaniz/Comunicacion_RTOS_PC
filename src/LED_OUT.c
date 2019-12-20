@@ -17,9 +17,7 @@
 
 /*==================[definiciones de datos internos]=========================*/
 
-SemaphoreHandle_t Mutex_Save, Mutex_Recibe, Mutex_Read; 	//Semaphore de tareas
-
-TickType_t tiempo_inic_ciclo;								//Variable para uso de espera.
+SemaphoreHandle_t Mutex_Save; 	//Semaphore de tareas
 
 /*==================[definiciones de datos externos]=========================*/
 
@@ -32,82 +30,46 @@ DEBUG_PRINT_ENABLE;  //Para configurar los mensajes por monitor
 
 /*==================[funcion principal]======================================*/
 
-	//----------- TASK CONTROL de OUT -----------------------
+//----------- TASK CONTROL de OUT -----------------------
 void ControlOut (void* taskParmPtr){
-
 	while(TRUE){
 
-	    if( control_Out == 1 ){
-		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
-	    	gpioWrite( LEDG, ON );					//Enciendo LED GREEN. Establecer conexion.
+	    if( control_Out == 1 ){						//Establecer conexion con sonda.
+		    gpioWrite( LEDG, ON );					//Enciendo LED GREEN.
+	    	uartWriteString(UART_PC, "r\r\n" );		//Comando de SONDA ON.
+	    	xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
 	    	control_Out =0;								//Reseteo de variable de control.
 		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
-	    if( control_Out == 2 ){
+	    if( control_Out == 2 ){						//Finalizar conexion con sonda.
+		    gpioWrite( LEDG, OFF);					//Apago LED GREEN.
 		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
-	    	gpioWrite( LEDG, OFF);					//Apago LED GREEN. Finalizar conexion.
+	    	uartWriteString(UART_PC, "o\r\n" ); 	//Comando de SONDA OFF.
 	    	control_Out =0;								//Reseteo de variable de control.
 		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
-	    if( control_Out == 3 ){
+	    if( control_Out == 3 ){						//Medir Campo.
+		    gpioWrite( LED2, ON );					//Enciendo LED2.
+		    uartWriteString(UART_PC, "D5\r\n" ); //Comando de Medición de Campo Electrico Sonda.
 		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
-		    gpioWrite( LED2, ON );					//Enciendo LED2. Medir Campo.
+	      	control_OutD= 3;							//Solicitud de envio de dato.
+	      	data_ex_pc=0;								//Reseteo de variable
 	    	control_Out =0;								//Reseteo de variable de control.
 		    xSemaphoreGive(Mutex_Save); 			//Fin zona critica.
 	    }
-	    if( control_Out == 4 ){
+	    if( control_Out == 4 ){						//Identificacion de sonda.
+		    gpioWrite( LED3, ON );						//Enciendo LED3.
+		    uartWriteString(UART_PC, "i\r\n" ); 		//Comando de ID de Sonda.
 		    xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Read
-		    gpioWrite( LED3, ON );					//Enciendo LED3. Estatus del conexion.
 	    	control_Out =0;								//Reseteo de variable de control.
+	        control_OutD= 4;							//Solicitud de envio de ID.
+	      	data_ex_pc=0;								//Reseteo de variable
 		    xSemaphoreGive(Mutex_Save);				 //Fin zona critica.
 	    }
 
-	    vTaskDelay( 10/ portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
+	    vTaskDelay( 10/ portTICK_RATE_MS ); 		//Estado Blocked para liberacion de recurso.
 
 	}
 }
 
-
-	//----------- TASK CONTROL de TECLA -----------------------
-void ControlTecla(void* taskParmPtr){
-
-	while(TRUE){
-		if (!gpioRead( TEC1 )){ //(!false) tecla presionada.
-			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
-			control_Out = 1;						//Solicitud de inicializacion de conexion.
-	      	data_ex_pc = 0;					//Reseteo de variable
-			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
-			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
-			}
-
-		if (!gpioRead( TEC2 )){ //(!false) tecla presionada.
-			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
-			control_Out = 2;				//Solicitud de apagado de conexion.
-	      	data_ex_pc=0;					//Reseteo de variable
-			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
-			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
-		   }
-
-
-		if (!gpioRead( TEC3 )) { //(!false) tecla presionada.
-			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
-	      	control_Out= 3;					//Solicitud de medicion.
-	      	control_OutD= 3;				//Solicitud de envio de dato.
-	      	data_ex_pc=0;					//Reseteo de variable
-	      	xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
-	      	vTaskDelay( 40 / portTICK_RATE_MS ); 	//Estado Blocked para liberacion de recurso.
-	       }
-
-		if (!gpioRead( TEC4 )) { //(!false) tecla presionada.
-			xSemaphoreTake(Mutex_Save,portMAX_DELAY); //Inicio zona critica. Save
-	        control_Out= 4;			 		//Solicitud identificación.
-	        control_OutD= 4;				//Solicitud de envio de ID.
-	      	data_ex_pc=0;					//Reseteo de variable
-			xSemaphoreGive(Mutex_Save);				//Salida de zona critica.
-			vTaskDelay( 40 / portTICK_RATE_MS ); 			//Estado Blocked para liberacion de recurso.
-		   }
-	}
-}
-
-
-/*==================[fin del archivo]========================================*/
+/*==============================[fin del archivo]========================================*/

@@ -35,13 +35,13 @@ extern uint8_t data_ex_pc;				//variable de dato PC.
 
 /*=====[Prototypes (declarations) of public functions]=======================*/
 
-bool_t hm10bleTest( int32_t uart ); // Prototito de función para testear HM10.
+bool_t hm10bleTest( int32_t uart ); // Prototipo de función para testear HM10.
 
-void init_UART_USB_BLE (void); 		// Prototipo de función inicializar Comunicacion.
+void init_UART_USB_BLE (void); 		// Prototipo de función configurar comunicacion de EDUCIAA.
 
-void Recibe_PC (void* taskParmPtr); // Prototipo de tarea recibir datos PC.
+void Recibe_PC (void* taskParmPtr); // Prototipo de tarea recibir datos de PC.
 
-void Recibe_BLE (void* taskParmPtr); // Prototipo de tarea recibir datos BLE.
+void Recibe_BLE (void* taskParmPtr); // Prototipo de tarea recibir datos de BLE.
 
 void ControlDataBLE (void* taskParmPtr); // Prototipo de tarea control de data BLE.
 
